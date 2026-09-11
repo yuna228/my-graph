@@ -327,3 +327,87 @@ st.info(
     "날짜별로 극장가 전체의 관객 규모가 어떻게 변했는지와 "
     "특히 관객이 가장 많이 몰린 날이 언제였는지 확인할 수 있습니다."
 )
+
+# ==================================================
+# 그래프 4
+# ==================================================
+st.divider()
+st.header("그래프 4. 영화별 누적 일관객 TOP 10")
+
+st.markdown(
+    "이 기간 동안 각 영화의 일관객을 모두 더해 "
+    "누적 관객이 많은 영화 10편을 비교합니다."
+)
+
+
+# 영화별 누적 일관객과 10위권 등장 일수 계산
+movie_summary = (
+    df.groupby("영화명")
+    .agg(
+        누적일관객=("일관객", "sum"),
+        **{"10위권 등장 일수": ("날짜", "count")}
+    )
+    .reset_index()
+)
+
+
+# 누적 일관객 TOP 10
+top10_movies = (
+    movie_summary
+    .sort_values("누적일관객", ascending=False)
+    .head(10)
+    .sort_values("누적일관객", ascending=True)
+)
+
+
+# 가로 막대그래프
+fig4 = px.bar(
+    top10_movies,
+    x="누적일관객",
+    y="영화명",
+    orientation="h",
+    title="기간 내 누적 일관객 TOP 10",
+    labels={
+        "누적일관객": "기간 내 일관객 합계",
+        "영화명": "영화"
+    },
+    hover_data={
+        "누적일관객": ":,.0f",
+        "10위권 등장 일수": True
+    }
+)
+
+
+# 마우스 오버 내용
+fig4.update_traces(
+    hovertemplate=(
+        "영화: %{y}<br>"
+        "기간 내 일관객 합계: %{x:,.0f}명<br>"
+        "10위권 등장 일수: %{customdata[0]}일"
+        "<extra></extra>"
+    )
+)
+
+
+fig4.update_layout(
+    xaxis_title="기간 내 일관객 합계(명)",
+    yaxis_title="영화",
+    height=600,
+    yaxis=dict(
+        categoryorder="total ascending"
+    )
+)
+
+
+st.plotly_chart(
+    fig4,
+    use_container_width=True
+)
+
+
+# 그래프로 알 수 있는 것
+st.markdown("**이 그래프로 알 수 있는 것**")
+st.info(
+    "이 기간 동안 어떤 영화가 가장 많은 관객을 모았는지와 "
+    "각 영화가 박스오피스 10위권에 얼마나 오래 머물렀는지를 비교할 수 있습니다."
+)
